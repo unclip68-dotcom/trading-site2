@@ -426,16 +426,34 @@ async function getPrice() {
       }
     } else {
       // Mode réel - essayer de récupérer les vraies données
-      const res = await fetch("https://api.allorigins.win/raw?url=https://www.eldorado.gg/fr/pet-simulator-99-gems/g/199-0-0");
-      const text = await res.text();
-      const regex = /([0-9]+,[0-9]+)\s€\s\/\sB/g;
-      const matches = [...text.matchAll(regex)];
-      prices = matches.map(m => parseFloat(m[1].replace(",", ".")));
-      
-      if (prices.length === 0) {
-        console.log("Impossible de récupérer les données réelles. Passage en simulation...");
+      try {
+        const res = await fetch("https://api.allorigins.win/raw?url=https://www.eldorado.gg/fr/pet-simulator-99-gems/g/199-0-0");
+        const text = await res.text();
+        const regex = /([0-9]+,[0-9]+)\s€\s\/\sB/g;
+        const matches = [...text.matchAll(regex)];
+        prices = matches.map(m => parseFloat(m[1].replace(",", ".")));
+        
+        if (prices.length === 0) {
+          console.log("❌ Impossibilité de récupérer les données réelles. Basculement en simulation...");
+          simulationMode = true;
+          document.getElementById('modeBtn').innerHTML = '🎮 Mode Simulation';
+          document.getElementById('modeBtn').style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+          document.getElementById('modeStatus').textContent = 'Simulation ACTIVE - API indisponible';
+          document.getElementById('modeStatus').style.color = '#f59e0b';
+          return;
+        }
+      } catch(err) {
+        console.log("❌ Erreur de connexion au mode réel. Basculement en simulation...", err.message);
         simulationMode = true;
-        return;
+        document.getElementById('modeBtn').innerHTML = '🎮 Mode Simulation';
+        document.getElementById('modeBtn').style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+        document.getElementById('modeStatus').textContent = 'Simulation ACTIVE - Erreur réseau';
+        document.getElementById('modeStatus').style.color = '#f59e0b';
+        
+        // Passer à la simulation pour ce cycle
+        for (let i = 0; i < 5; i++) {
+          prices.push(generateSimulatedPrice());
+        }
       }
     }
 
@@ -496,6 +514,4 @@ getPrice();
 </script>
 
 </body>
-</html>
-
 </html>

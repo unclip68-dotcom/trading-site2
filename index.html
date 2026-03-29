@@ -242,8 +242,8 @@
 
     <div class="control-group">
       <label>Mode</label>
-      <button id="modeBtn" class="inactive" onclick="toggleMode()" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">🎮 Mode Simulation</button>
-      <div id="modeStatus" class="status" style="color: #f59e0b; font-weight: bold;">Simulation ACTIVE</div>
+      <button id="modeBtn" class="inactive" disabled style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); opacity: 0.7; cursor: not-allowed;">🎮 Mode Simulation</button>
+      <div id="modeStatus" class="status" style="color: #f59e0b; font-weight: bold;">✅ Simulation ACTIVE (seul mode disponible)</div>
     </div>
   </div>
   
@@ -291,7 +291,6 @@ let alertThreshold = 0.80;
 let refreshIntervalMs = 2000;
 let updateCount = 0;
 let refreshIntervalId;
-let simulationMode = true;
 let basePrice = 0.65;
 
 // Initialiser le graphique
@@ -386,27 +385,6 @@ function toggleAlert() {
   }
 }
 
-function toggleMode() {
-  simulationMode = !simulationMode;
-  const btn = document.getElementById('modeBtn');
-  const status = document.getElementById('modeStatus');
-  
-  if (simulationMode) {
-    btn.innerHTML = '🎮 Mode Simulation';
-    btn.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
-    status.textContent = 'Simulation ACTIVE - Données de test';
-    status.style.color = '#f59e0b';
-    basePrice = 0.65;
-    console.log('Mode SIMULATION activé');
-  } else {
-    btn.innerHTML = '🌐 Mode Réel';
-    btn.style.background = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
-    status.textContent = 'Mode RÉEL - Eldorado.gg';
-    status.style.color = '#60a5fa';
-    console.log('Mode RÉEL activé');
-  }
-}
-
 function generateSimulatedPrice() {
   // Variation aléatoire réaliste
   const variation = (Math.random() - 0.5) * 0.3;
@@ -419,42 +397,9 @@ async function getPrice() {
   try {
     let prices = [];
     
-    if (simulationMode) {
-      // Mode simulation avec données réalistes
-      for (let i = 0; i < 5; i++) {
-        prices.push(generateSimulatedPrice());
-      }
-    } else {
-      // Mode réel - essayer de récupérer les vraies données
-      try {
-        const res = await fetch("https://api.allorigins.win/raw?url=https://www.eldorado.gg/fr/pet-simulator-99-gems/g/199-0-0");
-        const text = await res.text();
-        const regex = /([0-9]+,[0-9]+)\s€\s\/\sB/g;
-        const matches = [...text.matchAll(regex)];
-        prices = matches.map(m => parseFloat(m[1].replace(",", ".")));
-        
-        if (prices.length === 0) {
-          console.log("❌ Impossibilité de récupérer les données réelles. Basculement en simulation...");
-          simulationMode = true;
-          document.getElementById('modeBtn').innerHTML = '🎮 Mode Simulation';
-          document.getElementById('modeBtn').style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
-          document.getElementById('modeStatus').textContent = 'Simulation ACTIVE - API indisponible';
-          document.getElementById('modeStatus').style.color = '#f59e0b';
-          return;
-        }
-      } catch(err) {
-        console.log("❌ Erreur de connexion au mode réel. Basculement en simulation...", err.message);
-        simulationMode = true;
-        document.getElementById('modeBtn').innerHTML = '🎮 Mode Simulation';
-        document.getElementById('modeBtn').style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
-        document.getElementById('modeStatus').textContent = 'Simulation ACTIVE - Erreur réseau';
-        document.getElementById('modeStatus').style.color = '#f59e0b';
-        
-        // Passer à la simulation pour ce cycle
-        for (let i = 0; i < 5; i++) {
-          prices.push(generateSimulatedPrice());
-        }
-      }
+    // Mode simulation UNIQUEMENT
+    for (let i = 0; i < 5; i++) {
+      prices.push(generateSimulatedPrice());
     }
 
     let min = Math.min(...prices);
@@ -479,10 +424,8 @@ async function getPrice() {
       priceElement.classList.add("low");
       if (alertOn) {
         try {
-          new Audio("https://www.soundjay.com/buttons/beep-01a.mp3").play().catch(e => console.log("Son non disponible"));
-        } catch (e) {
-          console.log("Erreur audio:", e);
-        }
+          new Audio("https://www.soundjay.com/buttons/beep-01a.mp3").play().catch(e => {});
+        } catch (e) {}
       }
     } else {
       priceElement.classList.remove("low");
@@ -504,7 +447,7 @@ async function getPrice() {
     chart.update();
 
   } catch (e) {
-    console.log("Erreur lors de la récupération:", e);
+    console.error('Erreur:', e.message);
   }
 }
 

@@ -2,78 +2,373 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Trading Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trading Tracker - Eldorado</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
     body {
-      background: #0f172a;
+      background: linear-gradient(135deg, #0f172a 0%, #1a1f35 100%);
       color: white;
-      font-family: Arial;
-      text-align: center;
-    }
-    .card {
-      background: #1e293b;
-      margin: 20px auto;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana;
+      min-height: 100vh;
       padding: 20px;
-      border-radius: 20px;
-      width: 300px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.5);
     }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 2.5em;
+      text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .card {
+      background: linear-gradient(135deg, #1e293b 0%, #2d3748 100%);
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px rgba(59, 130, 246, 0.3);
+    }
+    
+    .card h2 {
+      font-size: 1.1em;
+      margin-bottom: 10px;
+      color: #90cdf4;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
     .price {
-      font-size: 40px;
+      font-size: 2.5em;
+      font-weight: bold;
       margin: 10px 0;
+      transition: color 0.3s;
     }
-    .low {
-      color: #22c55e;
-      animation: pulse 1s infinite;
+    
+    .price.low {
+      color: #10b981;
+      animation: pulse 0.8s infinite;
+      text-shadow: 0 0 10px #10b981;
     }
+    
     @keyframes pulse {
       0% { transform: scale(1); }
-      50% { transform: scale(1.1); }
+      50% { transform: scale(1.05); }
       100% { transform: scale(1); }
     }
+    
+    .controls {
+      background: linear-gradient(135deg, #1e293b 0%, #2d3748 100%);
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 30px;
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    label {
+      font-size: 0.9em;
+      color: #90cdf4;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    input[type="number"], input[type="range"] {
+      padding: 8px;
+      border: 1px solid #3b82f6;
+      border-radius: 8px;
+      background: #0f172a;
+      color: white;
+      font-size: 1em;
+    }
+    
+    input[type="range"] {
+      padding: 0;
+    }
+    
+    .threshold-value {
+      color: #fbbf24;
+      font-weight: bold;
+    }
+    
+    .chart-container {
+      background: linear-gradient(135deg, #1e293b 0%, #2d3748 100%);
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 30px;
+      border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+    
     button {
-      padding: 10px;
+      padding: 10px 20px;
       border-radius: 10px;
       border: none;
-      background: #3b82f6;
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
       color: white;
       cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s;
+      text-transform: uppercase;
+      font-size: 0.9em;
+      letter-spacing: 0.5px;
+    }
+    
+    button:hover {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+    }
+    
+    button:active {
+      transform: scale(0.95);
+    }
+    
+    .status {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 0.9em;
+      color: #60a5fa;
+    }
+    
+    .alert-active {
+      color: #10b981;
+      font-weight: bold;
+    }
+    
+    .alert-inactive {
+      color: #ef4444;
+      font-weight: bold;
+    }
+    
+    .subtitle {
+      text-align: center;
+      color: #90cdf4;
+      font-size: 0.95em;
+      margin-bottom: 20px;
+    }
+    
+    .chart-wrapper {
+      position: relative;
+      width: 100%;
+      height: 400px;
+      margin-bottom: 15px;
+    }
+    
+    #alertBtn.active {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+    }
+    
+    #alertBtn.inactive {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+    }
+    
+    .alert-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8em;
+      font-weight: bold;
+      margin-left: 8px;
+    }
+    
+    .alert-badge.on {
+      background-color: #10b981;
+      color: white;
+    }
+    
+    .alert-badge.off {
+      background-color: #ef4444;
+      color: white;
     }
   </style>
 </head>
 <body>
 
-<h1>📈 Trading Tracker</h1>
-
-<div class="card">
-  <h2>Prix le plus bas</h2>
-  <div id="price" class="price">...</div>
-  <button onclick="toggleAlert()">Activer / Désactiver alerte</button>
+<div class="container">
+  <h1>💎 Trading Tracker - Pet Simulator 99 Gems</h1>
+  <p class="subtitle">Suivi en temps réel des prix les plus bas sur Eldorado.gg</p>
+  
+  <!-- Contrôles -->
+  <div class="controls">
+    <div class="control-group">
+      <label for="interval">Intervalle de rafraîchissement (secondes)</label>
+      <input type="number" id="interval" min="1" max="60" value="5">
+      <button onclick="updateInterval()">Mettre à jour</button>
+    </div>
+    
+    <div class="control-group">
+      <label for="threshold">Seuil d'alerte (€)</label>
+      <input type="number" id="threshold" min="0" step="0.01" value="0.80">
+      <button onclick="updateThreshold()">Mettre à jour</button>
+    </div>
+    
+    <div class="control-group">
+      <label>État de l'alerte</label>
+      <button id="alertBtn" class="inactive" onclick="toggleAlert()">Activer alerte <span class="alert-badge off">OFF</span></button>
+      <div id="alertStatus" class="status alert-inactive">Alerte: DÉSACTIVÉE</div>
+    </div>
+  </div>
+  
+  <!-- Statistiques -->
+  <div class="stats-grid">
+    <div class="card">
+      <h2>💚 Prix le plus bas</h2>
+      <div id="price" class="price">--</div>
+      <p style="color: #60a5fa; font-size: 0.9em;">En temps réel</p>
+    </div>
+    
+    <div class="card">
+      <h2>📊 Prix maximum</h2>
+      <div id="maxPrice" class="price" style="color: #ef4444;">--</div>
+      <p style="color: #60a5fa; font-size: 0.9em;">Depuis le démarrage</p>
+    </div>
+    
+    <div class="card">
+      <h2>📈 Prix moyen</h2>
+      <div id="avgPrice" class="price" style="color: #f59e0b;">--</div>
+      <p style="color: #60a5fa; font-size: 0.9em;">Moyenne de la session</p>
+    </div>
+    
+    <div class="card">
+      <h2>⏱️ Mises à jour</h2>
+      <div id="updateCount" class="price" style="color: #06b6d4;">0</div>
+      <p style="color: #60a5fa; font-size: 0.9em;">Nombre de vérifications</p>
+    </div>
+  </div>
+  
+  <!-- Graphique -->
+  <div class="chart-container">
+    <h2 style="margin-bottom: 15px; color: #90cdf4;">📉 Historique des prix</h2>
+    <div class="chart-wrapper">
+      <canvas id="chart"></canvas>
+    </div>
+  </div>
 </div>
-
-<canvas id="chart" width="400" height="200"></canvas>
 
 <script>
 let history = [];
+let allPrices = [];
 let alertOn = false;
 let alertThreshold = 0.80;
+let updateInterval = 5000;
+let updateCount = 0;
+let refreshIntervalId;
 
+// Initialiser le graphique
 const ctx = document.getElementById('chart').getContext('2d');
 const chart = new Chart(ctx, {
   type: 'line',
   data: {
     labels: [],
     datasets: [{
-      label: 'Prix',
+      label: 'Prix (€)',
       data: [],
-      borderWidth: 2
+      borderColor: '#3b82f6',
+      backgroundColor: 'rgba(59, 130, 246, 0.1)',
+      borderWidth: 2,
+      fill: true,
+      tension: 0.4,
+      pointBackgroundColor: '#3b82f6',
+      pointBorderColor: '#fff',
+      pointRadius: 5,
+      pointHoverRadius: 7
     }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: {
+        display: true,
+        labels: {
+          color: '#90cdf4',
+          font: { size: 12 }
+        }
+      }
+    },
+    scales: {
+      y: {
+        ticks: { color: '#90cdf4' },
+        grid: { color: 'rgba(59, 130, 246, 0.1)' },
+        beginAtZero: false
+      },
+      x: {
+        ticks: { color: '#90cdf4' },
+        grid: { color: 'rgba(59, 130, 246, 0.1)' }
+      }
+    }
   }
 });
 
-function toggleAlert(){
+function updateThreshold() {
+  const newThreshold = parseFloat(document.getElementById('threshold').value);
+  if (newThreshold >= 0) {
+    alertThreshold = newThreshold;
+    console.log("Seuil d'alerte mis à jour:", alertThreshold + "€");
+  }
+}
+
+function updateInterval() {
+  const newInterval = parseInt(document.getElementById('interval').value);
+  if (newInterval >= 1 && newInterval <= 60) {
+    updateInterval = newInterval * 1000;
+    clearInterval(refreshIntervalId);
+    refreshIntervalId = setInterval(getPrice, updateInterval);
+    console.log("Intervalle mis à jour:", newInterval + "s");
+  }
+}
+
+function toggleAlert() {
   alertOn = !alertOn;
+  const btn = document.getElementById('alertBtn');
+  const status = document.getElementById('alertStatus');
+  
+  if (alertOn) {
+    btn.innerHTML = 'Désactiver alerte <span class="alert-badge on">ON</span>';
+    btn.classList.remove('inactive');
+    btn.classList.add('active');
+    status.textContent = 'Alerte: ACTIVÉE ✓';
+    status.className = 'status alert-active';
+  } else {
+    btn.innerHTML = 'Activer alerte <span class="alert-badge off">OFF</span>';
+    btn.classList.remove('active');
+    btn.classList.add('inactive');
+    status.textContent = 'Alerte: DÉSACTIVÉE';
+    status.className = 'status alert-inactive';
+  }
+  console.log('Alerte:', alertOn ? 'ACTIVÉE' : 'DÉSACTIVÉE');
 }
 
 async function getPrice() {
@@ -81,42 +376,70 @@ async function getPrice() {
     const res = await fetch("https://api.allorigins.win/raw?url=https://www.eldorado.gg/fr/pet-simulator-99-gems/g/199-0-0");
     const text = await res.text();
 
+    // Regex pour extraire les prix au format "X,XX € / B"
     const regex = /([0-9]+,[0-9]+)\s€\s\/\sB/g;
     const matches = [...text.matchAll(regex)];
 
     let prices = matches.map(m => parseFloat(m[1].replace(",", ".")));
-    let min = Math.min(...prices);
-
-    document.getElementById("price").innerText = min + " €";
-
-    if(min < alertThreshold){
-      document.getElementById("price").classList.add("low");
-      if(alertOn){
-        new Audio("https://www.soundjay.com/buttons/beep-01a.mp3").play();
-      }
-    } else {
-      document.getElementById("price").classList.remove("low");
+    
+    if (prices.length === 0) {
+      console.log("Aucun prix trouvé. Source HTML:", text.substring(0, 500));
+      return;
     }
 
-    const time = new Date().toLocaleTimeString();
-    history.push(min);
+    let min = Math.min(...prices);
+    let max = Math.max(...prices);
+    let avg = (prices.reduce((a, b) => a + b, 0) / prices.length).toFixed(2);
+
+    // Mettre à jour l'affichage du prix minimum
+    const priceElement = document.getElementById("price");
+    priceElement.innerText = min.toFixed(2) + " €";
+
+    // Mettre à jour max et avg globaux
+    allPrices.push(...prices);
+    const overallMax = Math.max(...allPrices).toFixed(2);
+    const overallAvg = (allPrices.reduce((a, b) => a + b, 0) / allPrices.length).toFixed(2);
+    
+    document.getElementById("maxPrice").innerText = overallMax + " €";
+    document.getElementById("avgPrice").innerText = overallAvg + " €";
+    document.getElementById("updateCount").innerText = ++updateCount;
+
+    // Alerte sonore et visuelle
+    if (min < alertThreshold) {
+      priceElement.classList.add("low");
+      if (alertOn) {
+        try {
+          new Audio("https://www.soundjay.com/buttons/beep-01a.mp3").play().catch(e => console.log("Son non disponible"));
+        } catch (e) {
+          console.log("Erreur audio:", e);
+        }
+      }
+    } else {
+      priceElement.classList.remove("low");
+    }
+
+    // Ajouter à l'historique
+    const time = new Date().toLocaleTimeString('fr-FR');
+    history.push({ price: min, time: time });
 
     chart.data.labels.push(time);
     chart.data.datasets[0].data.push(min);
 
-    if(chart.data.labels.length > 20){
+    // Limiter à 30 points sur le graphique
+    if (chart.data.labels.length > 30) {
       chart.data.labels.shift();
       chart.data.datasets[0].data.shift();
     }
 
     chart.update();
 
-  } catch(e) {
-    console.log("Erreur:", e);
+  } catch (e) {
+    console.log("Erreur lors de la récupération:", e);
   }
 }
 
-setInterval(getPrice, 5000);
+// Démarrer le rafraîchissement
+refreshIntervalId = setInterval(getPrice, updateInterval);
 getPrice();
 </script>
 

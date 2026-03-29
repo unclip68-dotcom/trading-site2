@@ -281,11 +281,34 @@
       <canvas id="chart"></canvas>
     </div>
   </div>
+
+  <!-- Meilleurs prix -->
+  <div class="chart-container">
+    <h2 style="margin-bottom: 15px; color: #90cdf4;">🏆 Top 5 - Meilleurs prix trouvés</h2>
+    <div id="bestPricesTable" style="overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; color: white;">
+        <thead>
+          <tr style="border-bottom: 2px solid #3b82f6;">
+            <th style="padding: 10px; text-align: left; color: #90cdf4;">Prix</th>
+            <th style="padding: 10px; text-align: left; color: #90cdf4;">Heure</th>
+            <th style="padding: 10px; text-align: left; color: #90cdf4;">Action</th>
+          </tr>
+        </thead>
+        <tbody id="bestPricesList">
+          <tr><td colspan="3" style="padding: 10px; color: #60a5fa;">En attente de données...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top: 15px;">
+      <a href="https://www.eldorado.gg/fr/pet-simulator-99-gems/g/199-0-0" target="_blank" style="display: inline-block; padding: 10px 20px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; text-decoration: none; border-radius: 10px; font-weight: bold;">🔗 Voir sur Eldorado</a>
+    </div>
+  </div>
 </div>
 
 <script>
 let history = [];
 let allPrices = [];
+let bestPrices = [];
 let alertOn = false;
 let alertThreshold = 0.80;
 let refreshIntervalMs = 2000;
@@ -393,6 +416,32 @@ function generateSimulatedPrice() {
   return parseFloat(price.toFixed(2));
 }
 
+function updateBestPricesTable() {
+  // Trier les meilleurs prix
+  const sorted = bestPrices
+    .sort((a, b) => a.price - b.price)
+    .slice(0, 5);
+
+  if (sorted.length === 0) {
+    document.getElementById('bestPricesList').innerHTML = '<tr><td colspan="3" style="padding: 10px; color: #60a5fa;">En attente de données...</td></tr>';
+    return;
+  }
+
+  let html = '';
+  sorted.forEach((item, index) => {
+    const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '✨';
+    html += `
+      <tr style="border-bottom: 1px solid #2d3748; background: ${index === 0 ? 'rgba(16, 185, 129, 0.1)' : ''};">
+        <td style="padding: 10px; color: #10b981; font-weight: bold;">${medal} ${item.price.toFixed(2)} €</td>
+        <td style="padding: 10px; color: #60a5fa;">${item.time}</td>
+        <td style="padding: 10px;"><a href="https://www.eldorado.gg/fr/pet-simulator-99-gems/g/199-0-0" target="_blank" style="color: #3b82f6; text-decoration: none; cursor: pointer;">Visiter ↗</a></td>
+      </tr>
+    `;
+  });
+  
+  document.getElementById('bestPricesList').innerHTML = html;
+}
+
 async function getPrice() {
   try {
     let prices = [];
@@ -434,6 +483,10 @@ async function getPrice() {
     // Ajouter à l'historique
     const time = new Date().toLocaleTimeString('fr-FR');
     history.push({ price: min, time: time });
+    
+    // Ajouter aux meilleurs prix
+    bestPrices.push({ price: min, time: time });
+    updateBestPricesTable();
 
     chart.data.labels.push(time);
     chart.data.datasets[0].data.push(min);

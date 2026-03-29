@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Trading Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      background: #0f172a;
+      color: white;
+      font-family: Arial;
+      text-align: center;
+    }
+    .card {
+      background: #1e293b;
+      margin: 20px auto;
+      padding: 20px;
+      border-radius: 20px;
+      width: 300px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+    .price {
+      font-size: 40px;
+      margin: 10px 0;
+    }
+    .low {
+      color: #22c55e;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    button {
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      background: #3b82f6;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<h1>📈 Trading Tracker</h1>
+
+<div class="card">
+  <h2>Prix le plus bas</h2>
+  <div id="price" class="price">...</div>
+  <button onclick="toggleAlert()">Activer / Désactiver alerte</button>
+</div>
+
+<canvas id="chart" width="400" height="200"></canvas>
+
+<script>
+let history = [];
+let alertOn = false;
+let alertThreshold = 0.80;
+
+const ctx = document.getElementById('chart').getContext('2d');
+const chart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [{
+      label: 'Prix',
+      data: [],
+      borderWidth: 2
+    }]
+  }
+});
+
+function toggleAlert(){
+  alertOn = !alertOn;
+}
+
+async function getPrice() {
+  try {
+    const res = await fetch("https://api.allorigins.win/raw?url=https://www.eldorado.gg/fr/pet-simulator-99-gems/g/199-0-0");
+    const text = await res.text();
+
+    const regex = /([0-9]+,[0-9]+)\s€\s\/\sB/g;
+    const matches = [...text.matchAll(regex)];
+
+    let prices = matches.map(m => parseFloat(m[1].replace(",", ".")));
+    let min = Math.min(...prices);
+
+    document.getElementById("price").innerText = min + " €";
+
+    if(min < alertThreshold){
+      document.getElementById("price").classList.add("low");
+      if(alertOn){
+        new Audio("https://www.soundjay.com/buttons/beep-01a.mp3").play();
+      }
+    } else {
+      document.getElementById("price").classList.remove("low");
+    }
+
+    const time = new Date().toLocaleTimeString();
+    history.push(min);
+
+    chart.data.labels.push(time);
+    chart.data.datasets[0].data.push(min);
+
+    if(chart.data.labels.length > 20){
+      chart.data.labels.shift();
+      chart.data.datasets[0].data.shift();
+    }
+
+    chart.update();
+
+  } catch(e) {
+    console.log("Erreur:", e);
+  }
+}
+
+setInterval(getPrice, 5000);
+getPrice();
+</script>
+
+</body>
+</html>

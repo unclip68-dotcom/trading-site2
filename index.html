@@ -224,7 +224,7 @@
   <div class="controls">
     <div class="control-group">
       <label for="interval">Intervalle de rafraîchissement (secondes)</label>
-      <input type="number" id="interval" min="1" max="60" value="5">
+      <input type="number" id="interval" min="1" max="60" value="2">
       <button onclick="updateInterval()">Mettre à jour</button>
     </div>
     
@@ -238,6 +238,12 @@
       <label>État de l'alerte</label>
       <button id="alertBtn" class="inactive" onclick="toggleAlert()">Activer alerte <span class="alert-badge off">OFF</span></button>
       <div id="alertStatus" class="status alert-inactive">Alerte: DÉSACTIVÉE</div>
+    </div>
+
+    <div class="control-group">
+      <label>Mode</label>
+      <button id="modeBtn" class="inactive" onclick="toggleMode()" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">🎮 Mode Simulation</button>
+      <div id="modeStatus" class="status" style="color: #f59e0b; font-weight: bold;">Simulation ACTIVE</div>
     </div>
   </div>
   
@@ -282,9 +288,11 @@ let history = [];
 let allPrices = [];
 let alertOn = false;
 let alertThreshold = 0.80;
-let refreshIntervalMs = 5000;
+let refreshIntervalMs = 2000;
 let updateCount = 0;
 let refreshIntervalId;
+let simulationMode = true;
+let basePrice = 0.65;
 
 // Initialiser le graphique
 const ctx = document.getElementById('chart').getContext('2d');
@@ -322,7 +330,9 @@ const chart = new Chart(ctx, {
       y: {
         ticks: { color: '#90cdf4' },
         grid: { color: 'rgba(59, 130, 246, 0.1)' },
-        beginAtZero: false
+        beginAtZero: false,
+        min: 0,
+        max: 1.5
       },
       x: {
         ticks: { color: '#90cdf4' },
@@ -376,20 +386,57 @@ function toggleAlert() {
   }
 }
 
+function toggleMode() {
+  simulationMode = !simulationMode;
+  const btn = document.getElementById('modeBtn');
+  const status = document.getElementById('modeStatus');
+  
+  if (simulationMode) {
+    btn.innerHTML = '🎮 Mode Simulation';
+    btn.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+    status.textContent = 'Simulation ACTIVE - Données de test';
+    status.style.color = '#f59e0b';
+    basePrice = 0.65;
+    console.log('Mode SIMULATION activé');
+  } else {
+    btn.innerHTML = '🌐 Mode Réel';
+    btn.style.background = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
+    status.textContent = 'Mode RÉEL - Eldorado.gg';
+    status.style.color = '#60a5fa';
+    console.log('Mode RÉEL activé');
+  }
+}
+
+function generateSimulatedPrice() {
+  // Variation aléatoire réaliste
+  const variation = (Math.random() - 0.5) * 0.3;
+  const price = Math.max(0.5, basePrice + variation);
+  basePrice = price;
+  return parseFloat(price.toFixed(2));
+}
+
 async function getPrice() {
   try {
-    const res = await fetch("https://api.allorigins.win/raw?url=https://www.eldorado.gg/fr/pet-simulator-99-gems/g/199-0-0");
-    const text = await res.text();
-
-    // Regex pour extraire les prix au format "X,XX € / B"
-    const regex = /([0-9]+,[0-9]+)\s€\s\/\sB/g;
-    const matches = [...text.matchAll(regex)];
-
-    let prices = matches.map(m => parseFloat(m[1].replace(",", ".")));
+    let prices = [];
     
-    if (prices.length === 0) {
-      console.log("Aucun prix trouvé. Source HTML:", text.substring(0, 500));
-      return;
+    if (simulationMode) {
+      // Mode simulation avec données réalistes
+      for (let i = 0; i < 5; i++) {
+        prices.push(generateSimulatedPrice());
+      }
+    } else {
+      // Mode réel - essayer de récupérer les vraies données
+      const res = await fetch("https://api.allorigins.win/raw?url=https://www.eldorado.gg/fr/pet-simulator-99-gems/g/199-0-0");
+      const text = await res.text();
+      const regex = /([0-9]+,[0-9]+)\s€\s\/\sB/g;
+      const matches = [...text.matchAll(regex)];
+      prices = matches.map(m => parseFloat(m[1].replace(",", ".")));
+      
+      if (prices.length === 0) {
+        console.log("Impossible de récupérer les données réelles. Passage en simulation...");
+        simulationMode = true;
+        return;
+      }
     }
 
     let min = Math.min(...prices);
@@ -451,5 +498,4 @@ getPrice();
 </body>
 </html>
 
-</body>
 </html>

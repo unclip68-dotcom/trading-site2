@@ -282,7 +282,7 @@ let history = [];
 let allPrices = [];
 let alertOn = false;
 let alertThreshold = 0.80;
-let updateInterval = 5000;
+let refreshIntervalMs = 5000;
 let updateCount = 0;
 let refreshIntervalId;
 
@@ -308,7 +308,7 @@ const chart = new Chart(ctx, {
   },
   options: {
     responsive: true,
-    maintainAspectRatio: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         display: true,
@@ -343,32 +343,37 @@ function updateThreshold() {
 function updateInterval() {
   const newInterval = parseInt(document.getElementById('interval').value);
   if (newInterval >= 1 && newInterval <= 60) {
-    updateInterval = newInterval * 1000;
+    refreshIntervalMs = newInterval * 1000;
     clearInterval(refreshIntervalId);
-    refreshIntervalId = setInterval(getPrice, updateInterval);
+    refreshIntervalId = setInterval(getPrice, refreshIntervalMs);
     console.log("Intervalle mis à jour:", newInterval + "s");
   }
 }
 
 function toggleAlert() {
-  alertOn = !alertOn;
-  const btn = document.getElementById('alertBtn');
-  const status = document.getElementById('alertStatus');
-  
-  if (alertOn) {
-    btn.innerHTML = 'Désactiver alerte <span class="alert-badge on">ON</span>';
-    btn.classList.remove('inactive');
-    btn.classList.add('active');
-    status.textContent = 'Alerte: ACTIVÉE ✓';
-    status.className = 'status alert-active';
-  } else {
-    btn.innerHTML = 'Activer alerte <span class="alert-badge off">OFF</span>';
-    btn.classList.remove('active');
-    btn.classList.add('inactive');
-    status.textContent = 'Alerte: DÉSACTIVÉE';
-    status.className = 'status alert-inactive';
+  try {
+    alertOn = !alertOn;
+    const btn = document.getElementById('alertBtn');
+    const status = document.getElementById('alertStatus');
+    
+    if (alertOn) {
+      btn.innerHTML = 'Désactiver alerte <span class="alert-badge on">ON</span>';
+      btn.classList.remove('inactive');
+      btn.classList.add('active');
+      status.textContent = 'Alerte: ACTIVÉE ✓';
+      status.className = 'status alert-active';
+      console.log('✓ Alerte ACTIVÉE');
+    } else {
+      btn.innerHTML = 'Activer alerte <span class="alert-badge off">OFF</span>';
+      btn.classList.remove('active');
+      btn.classList.add('inactive');
+      status.textContent = 'Alerte: DÉSACTIVÉE';
+      status.className = 'status alert-inactive';
+      console.log('✗ Alerte DÉSACTIVÉE');
+    }
+  } catch(e) {
+    console.error('Erreur toggleAlert:', e);
   }
-  console.log('Alerte:', alertOn ? 'ACTIVÉE' : 'DÉSACTIVÉE');
 }
 
 async function getPrice() {
@@ -439,9 +444,12 @@ async function getPrice() {
 }
 
 // Démarrer le rafraîchissement
-refreshIntervalId = setInterval(getPrice, updateInterval);
+refreshIntervalId = setInterval(getPrice, refreshIntervalMs);
 getPrice();
 </script>
+
+</body>
+</html>
 
 </body>
 </html>
